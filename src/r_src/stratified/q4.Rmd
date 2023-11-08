@@ -1,0 +1,49 @@
+---
+title: 'Q4'
+output: pdf_document
+date: "2023-11-07"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Question 4.  
+```{r loadData4, comment=NA, message=FALSE}
+library(tidyverse)
+library(readxl)
+
+# main data
+main_data = read_excel('../../Data/statisfaction_with_rounding_time.xlsx') %>% 
+  # create binary columns using its mean. 1 >= mean >= 0
+  mutate(satisBin = ifelse(Satisfaction >= mean(Satisfaction), 1, 0),
+         nurse1Bin = ifelse(Nurse1 >= mean(Nurse1), 1, 0),
+         nurse2Bin = ifelse(Nurse2 >= mean(Nurse2), 1, 0),
+         nurse3Bin = ifelse(Nurse3 >= mean(Nurse3), 1, 0)) %>% 
+  # create strata and assign each age group
+  mutate(ageStrata = ntile(Age, 5))
+
+trial = main_data %>% 
+  # drop old columns that has float types
+  select(-c(Satisfaction,Nurse1,Nurse2,Nurse3, Age, Pain)) %>%
+  # make sure values are numeric
+  mutate_all(~as.numeric(.))
+
+# any na?
+sum(is.na(trial)) # 0
+```
+```{r oddsSatisfation, comment=NA}
+library(broom)
+
+# fit the log regression model
+model_nurse1 = glm(satisBin ~ nurse1Bin + ageStrata, data = trial, family = 'binomial')
+model_nurse2 = glm(satisBin ~ nurse2Bin + ageStrata, data = trial, family = 'binomial')
+model_nurse3 = glm(satisBin ~ nurse3Bin + ageStrata, data = trial, family = 'binomial')
+
+# collect summary of each model
+tidy(model_nurse1)
+tidy(model_nurse2)
+tidy(model_nurse3)
+
+trial %>% group_by(ageStrata) %>% count() # check count for each strata 
+```
