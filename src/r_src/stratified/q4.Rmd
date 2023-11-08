@@ -47,3 +47,11 @@ tidy(model_nurse3)
 
 trial %>% group_by(ageStrata) %>% count() # check count for each strata 
 ```
+
+
+```{r comparedResults, comment=NA}
+cat('Odds of satisfaction is exp of coef: \n')
+cat('nurse1: ', exp(-0.2153717), '\n')
+cat('nurse2: ', exp(0.7237349), '\n')
+cat('nurse3: ', exp(0.6086602), '\n')
+```
