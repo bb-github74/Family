@@ -1,0 +1,84 @@
+---
+title: "w12"
+output: pdf_document
+date: "2023-11-17"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Question 1.  
+
+```{r w12, comment=NA, message=FALSE, warning=FALSE}
+library(tidyverse)
+data = read_csv('../../Data/comorbidLungCancer.csv')
+```
+
+```{r lassoRegres, comment=NA, message=FALSE}
+library(glmnet)
+
+# drop those columns not used in the analysis
+trial = data %>% 
+  select(-c(ID, Survival))
+
+# assign matrix and response
+X = trial %>% select(-c(Dead, Cancer)) %>% as.matrix()
+y = as.numeric(trial$Dead)
+
+# find smallest lambda for best model
+cv_model = cv.glmnet(X, y, alpha=1, family='binomial')
+```
+
+
+```{r bestLambda, comment=NA}
+# get optimal lambda value
+best_lambda = cv_model$lambda.min
+
+# coefficients using optimal lambda
+coeffs = coef(cv_model, s=best_lambda)
+```
+
+```{r comment=NA}
+coeffs
+```
+
+c) fit multiplicative model  
+
+```{r comment=NA}
+
+coeff_names = c('I496.','I486.','I285.9','I427.31','I491.21',
+                'I276.1','I428.0','I599.0','I403.90','I585.9') 
+
+interaction_data = trial[, coeff_names]
+
+interaction_data$interaction_term = apply(interaction_data, 1, prod)
+
+interaction_data = interaction_data %>% 
+  mutate(Dead = trial$Dead)
+
+# fit a log regression model with interaction terms
+mutliplicative_model = glm(Dead ~ ., data = interaction_data, 
+                           family = 'binomial')
+
+summary(mutliplicative_model)
+```
+```{r comment=NA}
+# Define a range of k values to test
+k_values = c(-1, 0, 1)  # Test -1, 0, and +1 for k
+
+# Store the likelihood ratio test statistics
+lrt_stats = numeric(length(k_values))
+
+# Fit models for different k values and perform likelihood ratio tests
+for (i in 1:length(k_values)) {
+  k <- k_values[i]
+  null_model <- glm(Dead ~ ., data = interaction_data[,-interaction_term], family = "binomial")
+  alternative_model <- glm(outcome ~ ., data = interacted_data, family = "binomial",
+                            weights = exp(k * interaction_terms))
+  lrt_stats[i] <- lrtest(null_model, alternative_model)$LR[2]
+}
+
+# Find the best-fitting k
+best_k = k_values[which.max(lrt_stats)]
+```
