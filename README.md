@@ -72,4 +72,4 @@ This report should include the following section and provided at approximate tim
 Example Completed Assignments: All of the following listed projects use patient's medical history to screen for the indicated disease. The recommendation for screening that emerges from these projects differs radically from the recommendation of US Preventive Services Task Force. The Task Force has systematically ignored how data in EHRs can be used to improve screening.  The projects listed here are pilot studies designed to understand the nature of the data.  Some of these projects have low percent of variation explained, which suggests alternative analysis is necessary. For more completed published studies, please use PubMed. All of these pilot projects use data from All of Us database.  All of these projects construct network models, through regression analysis.
 
 ## Summary of GLM (using important variables with LASSO)  
-![GLM Summary](docs/glm_important_variables.png = x.5)
+![GLM Summary](docs/glm_important_variables.png = x50)
