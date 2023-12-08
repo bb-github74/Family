@@ -71,8 +71,8 @@ This report should include the following section and provided at approximate tim
 4. Discussion section should include 4 distinct sections and there is no page limits.  The first section should be a summary of the key findings.  The second section should be a review of support for the findings in the literature. The third section should summarize study limitations.  The last section should conclude with policy implications. This section is due at last week of classes.
 Example Completed Assignments: All of the following listed projects use patient's medical history to screen for the indicated disease. The recommendation for screening that emerges from these projects differs radically from the recommendation of US Preventive Services Task Force. The Task Force has systematically ignored how data in EHRs can be used to improve screening.  The projects listed here are pilot studies designed to understand the nature of the data.  Some of these projects have low percent of variation explained, which suggests alternative analysis is necessary. For more completed published studies, please use PubMed. All of these pilot projects use data from All of Us database.  All of these projects construct network models, through regression analysis.
 
-## Summary of GLM Interactions (using important variables with LASSO)  
+## Summary of GLM Base Model (using LASSO)  
 <img src="docs/summary_base.png" width="200">
 
-## Summary of GLM Interactions (using important variables with LASSO)  
+## Summary of GLM Interactions (using LASSO)  
 <img src="docs/glm_important_variables.png" width="200">
