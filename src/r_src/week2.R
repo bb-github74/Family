@@ -1,6 +1,7 @@
-setwd("/Users/bat/Documents/Family/hap835/src1")
+setwd("C:/Users/bbaas/Desktop/hap835/scr1")
 
 library(tidyverse)
+library(glmnet)
 
 df2 = readRDS('../data1/afterw1_df1.rds')
 
@@ -9,13 +10,30 @@ created_cols = c("Age1839","Age4064","hasIns","Child",
                  "Seatbelt","isSmoker","persDoc","doesPA","isMSA",
                  "didFluShot", "mRace")
 
-########################## a #######################################
-stats_table = df2 %>% # group_by(Incom) %>% count()
+#Ass:A-calculate each group mean,SD (age, female, income,race, education, employment,smoking)
+# chech na
+df2 %>% 
+  dim() # 290680 x 41 # with NA
+  
+  #filter(complete.cases(.)) %>%    # uncomment if you run code below
+  # dim() # 5347       # without NA. 
+  
+
+df2 %>% 
+  mutate(hasInsFactor = as.factor(hasIns)) %>% 
+  filter(complete.cases(.)) %>% #write.csv('../data1/w2_na_dropped_df.csv', row.names = FALSE)
+  mutate(hasInsFactor = ifelse(hasInsFactor == 1, 'Yes', 'No'))# %>% 
+  #write.csv('../data1/test.csv', row.names = FALSE)
+
+df3 = df2 %>% 
+  filter(complete.cases(.)) #%>% write.csv('../data1/w2_na_dropped_df.csv', row.names = FALSE)
+
+stats_table = df3 %>% # group_by(Incom) %>% count()
+  #filter(Sex == 1) %>% 
   select(all_of(created_cols)) %>% 
   #names()
   group_by(hasIns) %>% 
   summarize(
-    
     frequency = n(),
     
     # age between 18 and 39
@@ -25,10 +43,6 @@ stats_table = df2 %>% # group_by(Incom) %>% count()
     # age between 40 and 64
     mean_age4064 = mean(Age4064, na.rm = TRUE),
     sd_age4064 = sd(Age4064, na.rm = TRUE),
-    
-    # gender: female or not female
-    mean_sex = mean(Sex, na.rm = TRUE),
-    sd_sex = sd(Sex, na.rm = TRUE),
     
     # income
     mean_Inc = mean(Incom, na.rm = TRUE),
@@ -50,7 +64,7 @@ stats_table = df2 %>% # group_by(Incom) %>% count()
     mean_isSmoker = mean(isSmoker, na.rm = TRUE),
     sd_isSmoker = sd(isSmoker, na.rm = TRUE))
 
-stats_table %>% t() %>% write.csv('w2_stats.csv')
+stats_table %>% t() #%>% write.csv('w2_stats.csv')
 ############################# b #######################################
 # function to calculate pooled standard deviation: 
 # equation is standardized difference = (m1 - m2) / pooled sd
@@ -76,93 +90,93 @@ sd_diff <- function(m1,m2,psd){
   return(val)
 }
 ############################## b ####################################
-n0 = stats_table$frequency[1] # 45049
-n1 = stats_table$frequency[2] # 245631
+n0 = stats_table$frequency[1] # 1119
+n1 = stats_table$frequency[2] # 4228
 
 psd_age1839 = pooled_sd(n0,n1,
                         stats_table$sd_age1839[1],
-                        stats_table$sd_age1839[2]) #4322
+                        stats_table$sd_age1839[2]) # .419
 sd_age1839 = sd_diff(stats_table$mean_age1839[1],
                      stats_table$mean_age1839[2],
                      psd_age1839)
-sd_age1839 # 256
+sd_age1839 # .232
 #++++++++++++++++++++++++++++++++++++++++++++++++age4064++++++++++++++++++++++++
 psd_age4064 = pooled_sd(n0,n1, 
                         stats_table$sd_age4064[1],
-                        stats_table$sd_age4064[2]) # .4322
+                        stats_table$sd_age4064[2]) # .419
 
 sd_age4064 = sd_diff(stats_table$mean_age4064[1],
                      stats_table$mean_age4064[2],
                      psd_age4064)
-sd_age4064   #-.255
+sd_age4064   #-.232
 
 #++++++++++++++++++++++++++++++++++++++++++++++++sex++++++++++++++++++++++++
-psd_sex = pooled_sd(n0,n1,
-                    stats_table$sd_sex[1],
-                    stats_table$sd_sex[2]) # .4878
-
-sd_sex = sd_diff(stats_table$mean_sex[1],stats_table$mean_sex[2],psd_sex) #-.0396
+#psd_sex = pooled_sd(n0,n1,
+#                    stats_table$sd_sex[1],
+#                    stats_table$sd_sex[2]) # .4878
+#
+#sd_sex = sd_diff(stats_table$mean_sex[1],stats_table$mean_sex[2],psd_sex) #-.0396
 #++++++++++++++++++++++++++++++++++++++++++++++++sex++++++++++++++++++++++++
 
 psd_inc = pooled_sd(n0,n1,
                     stats_table$sd_Incom[1],
-                    stats_table$sd_Incom[2]) #2.01
+                    stats_table$sd_Incom[2]) # 2.21
 
-sd_inc = sd_diff(stats_table$mean_Inc[1],stats_table$mean_Inc[2],psd_inc) #-1.887
+sd_inc = sd_diff(stats_table$mean_Inc[1],stats_table$mean_Inc[2],psd_inc) #-.817
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 psd_race = pooled_sd(n0,n1,
                     stats_table$sd_mRace[1],
-                    stats_table$sd_mRace[2]) #.3529
+                    stats_table$sd_mRace[2]) #.2774
 
 sd_race = sd_diff(stats_table$mean_mRace[1],
                   stats_table$mean_mRace[2],
                   psd_race) 
-#-.1659
+#-.244
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 psd_edu = pooled_sd(n0,n1,
                      stats_table$sd_hasEdu[1],
-                     stats_table$sd_hasEdu[2]) #.4752
+                     stats_table$sd_hasEdu[2]) #.4593
 
 sd_edu = sd_diff(stats_table$mean_hasEdu[1],
                  stats_table$mean_hasEdu[2],
-                 psd_edu) #-.5359
+                 psd_edu) #-.3879
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 psd_emp = pooled_sd(n0,n1,
                      stats_table$sd_Empl[1],
-                     stats_table$sd_Empl[2]) #.4196
+                     stats_table$sd_Empl[2]) #.4728
 
 sd_emp = sd_diff(stats_table$mean_Empl[1],
                  stats_table$mean_Empl[2],
-                 psd_emp) # 0.014
+                 psd_emp) # -0.013
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 psd_smo = pooled_sd(n0,n1,
                      stats_table$sd_isSmoker[1],
-                     stats_table$sd_isSmoker[2]) #.39265
+                     stats_table$sd_isSmoker[2]) #.4045
 
 sd_smo = sd_diff(stats_table$mean_isSmoker[1],
                  stats_table$mean_isSmoker[2],
-                 psd_smo) # .3721
+                 psd_smo) # .3139
 
-# Creating standartized difference table
+# Creating standardized difference table
 sd_table = data.frame(
-          feature = c("age1839", "age4064", "Sex","hasInc","Race","hasEdu","hasEmpl","isSmoker"),
-          value = c(sd_age1839,sd_age4064,sd_sex,sd_inc,sd_race,sd_edu,sd_emp,sd_smo))
+          feature = c("age1839", "age4064","hasInc","Race","hasEdu","hasEmpl","isSmoker"),
+          value = c(sd_age1839,sd_age4064,sd_inc,sd_race,sd_edu,sd_emp,sd_smo))
 
 sd_table = sd_table %>% 
   mutate('sdGreaterPoint25' = ifelse(value > .25, 1,0))
 
+sd_table  
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-library(glmnet)
+
 # drop NA
-model1 = df2 %>% 
+model1 = df3 %>% 
   select(all_of(created_cols)) %>%
-  select(!persDoc) %>% 
-  filter(complete.cases(.))
+  select(!persDoc) #%>% 
+  #filter(complete.cases(.))
 
 # to see label ratio
 model1 %>% 
-  group_by(hasIns) %>% count() 
-  # 0 = 22826 1 = 83192
+  group_by(hasIns) %>% count() #0=1119 1=4228
 
 # run logistic regression
 log_model = glm(hasIns ~ ., family = 'binomial', data = model1)
@@ -188,6 +202,7 @@ ftd_table = model1 %>%
   select(hasIns, insur_fitted) %>% 
   group_by(hasIns) %>% 
   summarise(
+    frequency = n(),
     mu = mean(insur_fitted),
     sigma = sd(insur_fitted),
     minim = min(insur_fitted),
@@ -197,16 +212,16 @@ ftd_table = model1 %>%
 sd_table  
 ftd_table
 
-n00 = 22915
-n11 = 83325
+n00 = 1119
+n11 = 4228
 
 ftd_e = pooled_sd(n00,n11,
                     ftd_table$sigma[1],
-                    ftd_table$sigma[2]) #.1441619
+                    ftd_table$sigma[2]) #.153
 
 ftd_diff = sd_diff(ftd_table$mu[1],
                  ftd_table$mu[2],
-                 ftd_e) #-.9444059 
+                 ftd_e) #-1.038 
 
 # e) standardized difference is not above .25
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
